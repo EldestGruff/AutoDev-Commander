@@ -1,0 +1,17 @@
+[tool.poetry]
+name = "autodev-commander"
+version = "0.1.0"
+description = "AI-Driven Development Orchestration"
+authors = ["Andy Fenner <andy@gruffsoftware.com>"]
+
+[tool.poetry.dependencies]
+python = "^3.11"
+# Initial dependencies to be added
+
+[tool.poetry.group.dev.dependencies]
+pytest = "^7.3.1"
+# Development dependencies
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
