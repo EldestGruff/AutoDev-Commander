@@ -1,5 +1,11 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from loguru import logger
+
+from .core.logger import setup_logging
+from .core.config import settings
+
+setup_logging()
 
 app = FastAPI(
     title="AutoDev Commander",
@@ -7,7 +13,6 @@ app = FastAPI(
     version="0.1.0"
 )
 
-# CORS middleware configuration
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -16,17 +21,19 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-@app.get("/")
-async def root():
-    return {
-        "status": "operational",
-        "version": "0.1.0"
-    }
+@app.on_event("startup")
+async def startup_event():
+    logger.info("Starting AutoDev Commander...")
+
+@app.on_event("shutdown")
+async def shutdown_event():
+    logger.info("Shutting down AutoDev Commander...")
 
 @app.get("/health")
 async def health_check():
     return {
         "status": "healthy",
+        "environment": settings.ENVIRONMENT,
         "services": {
             "ollama": "operational",
             "qdrant": "operational",
