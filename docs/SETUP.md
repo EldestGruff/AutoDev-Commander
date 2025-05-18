@@ -1,15 +1,14 @@
-# Setup and Installation Guide
+# Setup Guide
 
 ## Prerequisites
 - Ubuntu 25.04
-- Docker
-- Python 3.11+
-- Poetry
+- NVIDIA GPU (RTX A4500)
+- ZFS storage pool
+- Docker and Docker Compose
 
-## Installation Steps
-1. Clone the repository
-2. Install dependencies
-3. Configure environment
-4. Launch services
+## Installation
 
-[Detailed setup instructions to be added]
+1. Clone the repository:
+```bash
+git clone https://github.com/EldestGruff/AutoDev-Commander.git
+cd AutoDev-Commander

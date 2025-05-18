@@ -13,44 +13,39 @@ services:
       - NVIDIA_VISIBLE_DEVICES=all
       - OLLAMA_HOST=0.0.0.0
       - OLLAMA_GPU_LAYERS=35
-      - OLLAMA_GPUMEMORYUTILIZATION=0.95
-      - CUDA_VERSION=12.2
     ports:
       - "11434:11434"
     volumes:
-      - /eniac/autodev/models/ollama:/root/.ollama
+      - ${MODELS_PATH}/ollama:/root/.ollama
     healthcheck:
-      test: ["CMD", "sh", "-c", "curl -f http://localhost:11434/api/tags && ollama list"]
-      interval: 30s
-      timeout: 20s
-      retries: 5
-      start_period: 2m
+      test: ["CMD", "curl", "-f", "http://localhost:11434"]
+      interval: 20s
+      timeout: 10s
+      retries: 3
 
   qdrant:
     image: qdrant/qdrant
     environment:
-      - QDRANT__CLUSTER__ENABLED=false  
+      - QDRANT__CLUSTER__ENABLED=false
       - QDRANT__STORAGE__HANDLE_COLLECTION_LOAD_ERRORS=true
-      - QDRANT__SERVICE__HTTP_PORT=6333
     ports:
-      - "6334:6333"  # Changed port to avoid conflict
+      - "6333:6333"
     volumes:
-      - /eniac/autodev/qdrant_live/storage:/qdrant/storage
-      - /eniac/autodev/qdrant_live/snapshots:/qdrant/snapshots
+      - ${QDRANT_PATH}/storage:/qdrant/storage
+      - ${QDRANT_PATH}/snapshots:/qdrant/snapshots
+    user: "1000:1000"
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:6333/readyz"]
       interval: 20s
       timeout: 10s
       retries: 3
-      start_period: 60s
-    user: "1000:1000"
 
   redis:
     image: redis:alpine
     ports:
       - "6379:6379"
     volumes:
-      - /eniac/autodev/redis:/data
+      - ${REDIS_PATH}:/data
     command: redis-server --appendonly yes
     user: "1000:1000"
     healthcheck:
@@ -64,15 +59,14 @@ services:
     ports:
       - "5678:5678"
     volumes:
-      - /eniac/autodev/n8n:/home/node/.n8n
+      - ${N8N_PATH}:/home/node/.n8n
     environment:
       - N8N_RUNNERS_ENABLED=true
       - N8N_HOST=${N8N_HOST:-localhost}
       - N8N_PORT=5678
       - N8N_PROTOCOL=http
       - N8N_USER_FOLDER=/home/node/.n8n
-      - N8N_SECURE_COOKIE=False
-      - N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS=true
+      - N8N_SECURE_COOKIE=false
     user: "1000:1000"
     depends_on:
       redis:
