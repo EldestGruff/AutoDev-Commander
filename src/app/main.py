@@ -1,16 +1,35 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from contextlib import asynccontextmanager
 from loguru import logger
 
 from .core.logger import setup_logging
 from .core.config import settings
+from .core.di import get_container
+from .api.v1.api import api_router
+from .api.v1.endpoints import test
 
 setup_logging()
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Startup
+    container = get_container()
+    app.state.container = container
+    logger.info("Starting AutoDev Commander...")
+    
+    yield
+    
+    # Shutdown
+    if hasattr(app.state, "container"):
+        await app.state.container.cleanup()
+    logger.info("Shutting down AutoDev Commander...")
 
 app = FastAPI(
     title="AutoDev Commander",
     description="AI-Driven Development Orchestration",
-    version="0.1.0"
+    version="0.1.0",
+    lifespan=lifespan
 )
 
 app.add_middleware(
@@ -21,23 +40,19 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-@app.on_event("startup")
-async def startup_event():
-    logger.info("Starting AutoDev Commander...")
-
-@app.on_event("shutdown")
-async def shutdown_event():
-    logger.info("Shutting down AutoDev Commander...")
-
-@app.get("/health")
-async def health_check():
-    return {
-        "status": "healthy",
-        "environment": settings.ENVIRONMENT,
-        "services": {
-            "ollama": "operational",
-            "qdrant": "operational",
-            "redis": "operational",
-            "n8n": "operational"
-        }
-    }
+app.include_router(api_router, prefix="/api/v1")
+api_router.include_router(test.router, prefix="/test", tags=["test"])
+D
+D
+D
+D
+D
+D
+D
+D
+D
+D
+D
+D
+D
+MODELS_PATH=${STORAGE_BASE}/models

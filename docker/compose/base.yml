@@ -33,7 +33,6 @@ services:
     volumes:
       - ${QDRANT_PATH}/storage:/qdrant/storage
       - ${QDRANT_PATH}/snapshots:/qdrant/snapshots
-    user: "1000:1000"
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:6333/readyz"]
       interval: 20s
@@ -47,27 +46,8 @@ services:
     volumes:
       - ${REDIS_PATH}:/data
     command: redis-server --appendonly yes
-    user: "1000:1000"
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
       interval: 10s
       timeout: 5s
       retries: 3
-
-  n8n:
-    image: n8nio/n8n
-    ports:
-      - "5678:5678"
-    volumes:
-      - ${N8N_PATH}:/home/node/.n8n
-    environment:
-      - N8N_RUNNERS_ENABLED=true
-      - N8N_HOST=${N8N_HOST:-localhost}
-      - N8N_PORT=5678
-      - N8N_PROTOCOL=http
-      - N8N_USER_FOLDER=/home/node/.n8n
-      - N8N_SECURE_COOKIE=false
-    user: "1000:1000"
-    depends_on:
-      redis:
-        condition: service_healthy
