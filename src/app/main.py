@@ -7,7 +7,6 @@ from .core.logger import setup_logging
 from .core.config import settings
 from .core.di import get_container
 from .api.v1.api import api_router
-from .api.v1.endpoints import test
 
 setup_logging()
 
@@ -41,18 +40,8 @@ app.add_middleware(
 )
 
 app.include_router(api_router, prefix="/api/v1")
-api_router.include_router(test.router, prefix="/test", tags=["test"])
-D
-D
-D
-D
-D
-D
-D
-D
-D
-D
-D
-D
-D
-MODELS_PATH=${STORAGE_BASE}/models
+
+# Add a simple health check
+@app.get("/health")
+async def health_check():
+    return {"status": "healthy"}
