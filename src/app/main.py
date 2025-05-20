@@ -1,3 +1,4 @@
+# src/app/main.py
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from contextlib import asynccontextmanager
@@ -6,6 +7,7 @@ from loguru import logger
 from .core.logger import setup_logging
 from .core.config import settings
 from .core.di import get_container
+from .core.middleware import setup_middleware
 from .api.v1.api import api_router
 
 setup_logging()
@@ -28,8 +30,12 @@ app = FastAPI(
     title="AutoDev Commander",
     description="AI-Driven Development Orchestration",
     version="0.1.0",
-    lifespan=lifespan
+    lifespan=lifespan,
+    debug=settings.DEBUG
 )
+
+# Setup middleware
+setup_middleware(app)
 
 app.add_middleware(
     CORSMiddleware,

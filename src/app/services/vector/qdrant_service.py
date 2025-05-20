@@ -4,13 +4,23 @@ from qdrant_client.http import models
 from loguru import logger
 
 from ...core.config import settings
+from ...core.exceptions import (
+    VectorServiceError,
+    CollectionNotFoundError,
+    CollectionCreateError,
+    VectorOperationError,
+    ServiceConnectionError
+)
 
 class QdrantService:
     def __init__(self):
-        self.client = QdrantClient(
-            host=settings.QDRANT_HOST,
-            port=settings.QDRANT_PORT
-        )
+        try:
+            self.client = QdrantClient(
+                host=settings.QDRANT_HOST,
+                port=settings.QDRANT_PORT
+            )
+        except Exception as e:
+            raise ServiceConnectionError("Qdrant", str(e))
 
     async def create_collection(
         self,
@@ -28,7 +38,7 @@ class QdrantService:
             )
         except Exception as e:
             logger.error(f"Error creating collection: {e}")
-            raise
+            raise CollectionCreateError(f"Failed to create collection: {str(e)}")
 
     async def upsert_vectors(
         self,
@@ -39,6 +49,9 @@ class QdrantService:
     ) -> None:
         """Upsert vectors into collection."""
         try:
+            if not self.client.collection_exists(collection_name):
+                raise CollectionNotFoundError(collection_name)
+                
             self.client.upsert(
                 collection_name=collection_name,
                 points=models.Batch(
@@ -47,9 +60,11 @@ class QdrantService:
                     payloads=payloads
                 )
             )
+        except CollectionNotFoundError:
+            raise
         except Exception as e:
             logger.error(f"Error upserting vectors: {e}")
-            raise
+            raise VectorOperationError(f"Failed to upsert vectors: {str(e)}")
 
     async def search_vectors(
         self,
@@ -59,6 +74,9 @@ class QdrantService:
     ) -> List[Dict[str, Any]]:
         """Search for similar vectors."""
         try:
+            if not self.client.collection_exists(collection_name):
+                raise CollectionNotFoundError(collection_name)
+                
             results = self.client.search(
                 collection_name=collection_name,
                 query_vector=query_vector,
@@ -72,6 +90,8 @@ class QdrantService:
                 }
                 for hit in results
             ]
+        except CollectionNotFoundError:
+            raise
         except Exception as e:
             logger.error(f"Error searching vectors: {e}")
-            raise
+            raise VectorOperationError(f"Failed to search vectors: {str(e)}")
